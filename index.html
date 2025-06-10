@@ -20,16 +20,16 @@
             --terminal-border: #333;
             --text-color: #e0e0e0;
             --text-shadow: 0 0 8px var(--terminal-glow);
-            --secondary-glow: rgba(0, 255, 255, 0.5); /* For cyan elements */
+            --secondary-glow: rgba(0, 255, 255, 0.5);
         }
 
         body {
             background: #000;
-            overflow-x: hidden; /* Prevent horizontal scroll from matrix */
+            overflow-x: hidden;
             font-family: 'Inconsolata', monospace;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Align to top for scrollable content */
+            align-items: flex-start;
             min-height: 100vh;
             perspective: 1000px;
             color: var(--text-color);
@@ -48,24 +48,21 @@
 
         .terminal-container {
             position: relative;
-            width: 95%; /* Adjust for broader content */
-            max-width: 1200px; /* Max width for content */
-            margin-top: 3vh; /* Small margin from top */
+            width: 95%;
+            max-width: 1200px;
+            margin-top: 3vh;
             margin-bottom: 3vh;
             background: var(--terminal-bg);
             border-radius: 8px;
             box-shadow: 0 0 30px rgba(0, 255, 0, 0.5),
                         inset 0 0 10px rgba(0, 255, 0, 0.2);
-            overflow: hidden; /* Keep hidden for container, body will scroll */
+            overflow: hidden;
             border: 1px solid var(--terminal-green);
             transform-style: preserve-3d;
-            /* Removed animation: float to improve mobile scrolling */
             display: flex;
             flex-direction: column;
-            min-height: 94vh; /* Ensure it takes most of the viewport height */
+            min-height: 94vh;
         }
-
-        /* Removed @keyframes float as it's no longer used */
 
         .terminal-header {
             background: linear-gradient(to right, #0a0a0a, #111);
@@ -99,7 +96,7 @@
         .terminal-body {
             padding: 20px;
             flex-grow: 1;
-            overflow-y: auto; /* This handles the internal scrolling */
+            overflow-y: auto;
             line-height: 1.6;
             font-size: 1.05rem;
         }
@@ -126,8 +123,8 @@
         }
 
         .card-cyber {
-            background: #1a1a2e; /* Darker background for cards */
-            border: 1px solid rgba(0, 255, 255, 0.2); /* Cyan border */
+            background: #1a1a2e;
+            border: 1px solid rgba(0, 255, 255, 0.2);
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.1),
                         inset 0 0 5px rgba(0, 255, 255, 0.1);
@@ -144,27 +141,27 @@
         .chart-container {
             position: relative;
             width: 100%;
-            max-width: 600px; /* Adjusted max-width for better chart display */
+            max-width: 600px;
             margin-left: auto;
             margin-right: auto;
-            height: 300px; /* Base height for chart container */
-            max-height: 400px; /* Maximum height to prevent excessive growth */
-            background-color: rgba(0, 0, 0, 0.3); /* Transparent background for charts */
+            min-height: 30vh; /* Responsive min-height for mobile */
+            max-height: 400px;
+            background-color: rgba(0, 0, 0, 0.3);
             border-radius: 8px;
             padding: 10px;
             box-shadow: inset 0 0 8px rgba(0, 255, 255, 0.2);
         }
         @media (min-width: 768px) {
             .chart-container {
-                height: 350px; /* Increased height for medium screens */
-                max-height: 450px; /* Increased max-height for medium screens */
+                min-height: 35vh;
+                max-height: 450px;
             }
         }
         @media (min-width: 1024px) {
             .chart-container {
-                max-width: 700px; /* Wider charts on larger screens */
-                height: 400px; /* Increased height for large screens */
-                max-height: 500px; /* Increased max-height for large screens */
+                max-width: 700px;
+                min-height: 40vh;
+                max-height: 500px;
             }
         }
         
@@ -181,16 +178,16 @@
             left: 12px;
             top: 1.25rem;
             width: 2px;
-            height: calc(100% - 1.25rem); /* Adjust height to not overlap step number */
+            height: calc(100% - 1.25rem);
             background-color: var(--terminal-green);
             box-shadow: 0 0 5px var(--terminal-glow);
         }
         .flow-step::after {
             content: attr(data-step);
             position: absolute;
-            left: -2px; /* Adjust to align with line */
+            left: -2px;
             top: 0;
-            width: 32px; /* Slightly larger for impact */
+            width: 32px;
             height: 32px;
             border-radius: 50%;
             background-color: var(--terminal-green);
@@ -204,7 +201,6 @@
             box-shadow: 0 0 10px var(--terminal-glow);
         }
 
-        /* Adjustments for text within lists and strong tags */
         ul.list-disc strong {
             color: var(--terminal-cyan);
             text-shadow: 0 0 5px var(--secondary-glow);
@@ -257,7 +253,6 @@
             100% { clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%); }
         }
 
-        /* Fade-in styles */
         .fade-in-section {
             opacity: 0;
             transform: translateY(20px);
@@ -558,18 +553,17 @@
             canvas.height = window.innerHeight;
         });
 
-        // Cyberpunk palette for charts
         const cyberpunkPalette = [
-            '#00ff00', // Green for positive/main
-            '#00ffff', // Cyan for secondary
-            '#ff00ff', // Magenta (replacing a lighter green)
-            '#ffff00', // Yellow
-            '#ff6600', // Orange
-            '#004d7a'  // Dark blue (background complement)
+            '#00ff00',
+            '#00ffff',
+            '#ff00ff',
+            '#ffff00',
+            '#ff6600',
+            '#004d7a'
         ];
-        const cyberpunkRed = '#ff0000'; // Pure red for warnings
+        const cyberpunkRed = '#ff0000';
 
-        function wrapLabel(label, maxLength = 16) {
+        function wrapLabel(label, maxLength = 12) { // Changed maxLength to 12
             if (typeof label !== 'string' || label.length <= maxLength) {
                 return label;
             }
@@ -577,11 +571,11 @@
             const lines = [];
             let currentLine = '';
             for (const word of words) {
-                if ((currentLine + ' ' + word).length > maxLength) {
+                if ((currentLine + ' ' + word).length > maxLength && currentLine !== '') {
                     lines.push(currentLine.trim());
                     currentLine = word;
                 } else {
-                    currentLine += ' ' + word;
+                    currentLine += (currentLine === '' ? '' : ' ') + word;
                 }
             }
             lines.push(currentLine.trim());
@@ -611,11 +605,11 @@
             scales: {
                 x: {
                     grid: {
-                        color: 'rgba(0, 255, 255, 0.1)', // Cyan grid lines
+                        color: 'rgba(0, 255, 255, 0.1)',
                         borderColor: '#0f0'
                     },
                     ticks: {
-                        color: '#0f0', // Green tick labels
+                        color: '#0f0',
                         font: { family: 'Inconsolata' }
                     }
                 },
@@ -659,7 +653,7 @@
                     },
                     y: {
                         grid: { color: 'rgba(0, 255, 255, 0.1)' },
-                        ticks: { color: '#0ff', font: { family: 'Inconsolata' } }
+                        ticks: { color: '#0ff', font: { family: 'Inconsolata', size: 10 } } /* Reduced font size for y-axis labels */
                     }
                 }
             }
@@ -681,11 +675,11 @@
                 plugins: {
                     tooltip: tooltipTitleCallback.plugins.tooltip,
                     legend: {
-                        display: true, // Display legend for doughnut
+                        display: true,
                         position: 'bottom',
                         labels: {
-                            color: 'var(--text-color)', // Text color for legend
-                            font: { family: 'Inconsolata' }
+                            color: 'var(--text-color)',
+                            font: { family: 'Inconsolata', size: 10 } /* Reduced font size for legend labels */
                         }
                     }
                 }
@@ -708,11 +702,11 @@
                  plugins: {
                     tooltip: tooltipTitleCallback.plugins.tooltip,
                     legend: {
-                        display: true, // Display legend for doughnut
+                        display: true,
                         position: 'bottom',
                         labels: {
-                            color: 'var(--text-color)', // Text color for legend
-                            font: { family: 'Inconsolata' }
+                            color: 'var(--text-color)',
+                            font: { family: 'Inconsolata', size: 10 } /* Reduced font size for legend labels */
                         }
                     }
                 }
@@ -736,7 +730,7 @@
                     x: {
                         beginAtZero: true,
                         grid: { color: 'rgba(0, 255, 255, 0.1)' },
-                        ticks: { color: '#0ff', font: { family: 'Inconsolata' } }
+                        ticks: { color: '#0ff', font: { family: 'Inconsolata', size: 10 } } /* Reduced font size for x-axis labels */
                     },
                     y: {
                         grid: { color: 'rgba(0, 255, 255, 0.1)' },
@@ -746,20 +740,19 @@
             }
         });
 
-        // Intersection Observer for fade-in effect
         const fadeSections = document.querySelectorAll('.fade-in-section');
 
         const observerOptions = {
-            root: null, // viewport
+            root: null,
             rootMargin: '0px',
-            threshold: 0.1 // When 10% of the item is visible
+            threshold: 0.1
         };
 
         const observer = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('is-visible');
-                    observer.unobserve(entry.target); // Stop observing once visible
+                    observer.unobserve(entry.target);
                 }
             });
         }, observerOptions);
