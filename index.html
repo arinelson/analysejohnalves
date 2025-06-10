@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico de Performance | Canal JohnAlves //CYBER-ANALYSIS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --terminal-bg: #0a0a12;
+            --terminal-green: #0f0;
+            --terminal-cyan: #0ff;
+            --terminal-purple: #b19cd9;
+            --terminal-red: #f44;
+            --terminal-glow: rgba(0, 255, 0, 0.7);
+            --terminal-border: #333;
+            --text-color: #e0e0e0;
+            --text-shadow: 0 0 8px var(--terminal-glow);
+            --secondary-glow: rgba(0, 255, 255, 0.5); /* For cyan elements */
+        }
+
+        body {
+            background: #000;
+            overflow-x: hidden; /* Prevent horizontal scroll from matrix */
+            font-family: 'Inconsolata', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for scrollable content */
+            min-height: 100vh;
+            perspective: 1000px;
+            color: var(--text-color);
+            text-shadow: var(--text-shadow);
+        }
+
+        .matrix-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.15;
+        }
+
+        .terminal-container {
+            position: relative;
+            width: 95%; /* Adjust for broader content */
+            max-width: 1200px; /* Max width for content */
+            margin-top: 3vh; /* Small margin from top */
+            margin-bottom: 3vh;
+            background: var(--terminal-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5),
+                        inset 0 0 10px rgba(0, 255, 0, 0.2);
+            overflow: hidden;
+            border: 1px solid var(--terminal-green);
+            transform-style: preserve-3d;
+            animation: float 8s ease-in-out infinite;
+            display: flex;
+            flex-direction: column;
+            min-height: 94vh; /* Ensure it takes most of the viewport height */
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotateX(1deg) rotateY(0.5deg); /* Reduced initial rotation */
+            }
+            50% {
+                transform: translateY(-5px) rotateX(0.5deg) rotateY(0.25deg); /* Reduced translateY and rotation */
+            }
+        }
+
+        .terminal-header {
+            background: linear-gradient(to right, #0a0a0a, #111);
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--terminal-green);
+            font-family: 'Share Tech Mono', monospace;
+            border-bottom: 1px solid var(--terminal-green);
+            box-shadow: 0 2px 15px rgba(0, 255, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        .terminal-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .terminal-button.red { background: #ff5f56; }
+        .terminal-button.yellow { background: #ffbd2e; }
+        .terminal-button.green { background: #27c93f; }
+
+        .terminal-body {
+            padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+            line-height: 1.6;
+            font-size: 1.05rem;
+        }
+        
+        .section-title {
+            position: relative;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--terminal-cyan);
+            text-shadow: 0 0 10px var(--secondary-glow);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.8rem;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 80px;
+            height: 3px;
+            background-color: var(--terminal-green);
+            border-radius: 9999px;
+            box-shadow: 0 0 8px var(--terminal-glow);
+        }
+
+        .card-cyber {
+            background: #1a1a2e; /* Darker background for cards */
+            border: 1px solid rgba(0, 255, 255, 0.2); /* Cyan border */
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.1),
+                        inset 0 0 5px rgba(0, 255, 255, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .card-cyber:hover {
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.3),
+                        inset 0 0 8px rgba(0, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* Adjusted max-width for better chart display */
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            background-color: rgba(0, 0, 0, 0.3); /* Transparent background for charts */
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: inset 0 0 8px rgba(0, 255, 255, 0.2);
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        @media (min-width: 1024px) {
+            .chart-container {
+                max-width: 700px; /* Wider charts on larger screens */
+                height: 400px;
+            }
+        }
+        
+        .flow-step {
+            position: relative;
+            padding-left: 40px;
+            padding-bottom: 2rem;
+            color: var(--text-color);
+            text-shadow: var(--text-shadow);
+        }
+        .flow-step:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 1.25rem;
+            width: 2px;
+            height: calc(100% - 1.25rem); /* Adjust height to not overlap step number */
+            background-color: var(--terminal-green);
+            box-shadow: 0 0 5px var(--terminal-glow);
+        }
+        .flow-step::after {
+            content: attr(data-step);
+            position: absolute;
+            left: -2px; /* Adjust to align with line */
+            top: 0;
+            width: 32px; /* Slightly larger for impact */
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--terminal-green);
+            color: var(--terminal-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            border: 2px solid var(--terminal-cyan);
+            box-shadow: 0 0 10px var(--terminal-glow);
+        }
+
+        /* Adjustments for text within lists and strong tags */
+        ul.list-disc strong {
+            color: var(--terminal-cyan);
+            text-shadow: 0 0 5px var(--secondary-glow);
+        }
+        
+        .glitch {
+            position: relative;
+            font-size: 1.1em;
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--terminal-green);
+            text-shadow: 0 0 8px var(--terminal-glow);
+        }
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--terminal-bg);
+            overflow: hidden;
+        }
+        .glitch::before {
+            left: 2px;
+            text-shadow: -2px 0 var(--terminal-red);
+            clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+            animation: glitch-anim-1 4s infinite linear alternate-reverse;
+        }
+        .glitch::after {
+            left: -2px;
+            text-shadow: -2px 0 var(--terminal-cyan);
+            clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+            animation: glitch-anim-2 4s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim-1 {
+            0% { clip-path: polygon(0 2%, 100% 2%, 100% 33%, 0 33%); }
+            20% { clip-path: polygon(0 43%, 100% 43%, 100% 45%, 0 45%); }
+            40% { clip-path: polygon(0 25%, 100% 25%, 100% 75%, 0 75%); }
+            60% { clip-path: polygon(0 60%, 100% 60%, 100% 20%, 0 20%); }
+            80% { clip-path: polygon(0 80%, 100% 80%, 100% 55%, 0 55%); }
+            100% { clip-path: polygon(0 45%, 100% 45%, 100% 15%, 0 15%); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip-path: polygon(0 67%, 100% 67%, 100% 98%, 0 98%); }
+            20% { clip-path: polygon(0 88%, 100% 88%, 100% 70%, 0 70%); }
+            40% { clip-path: polygon(0 55%, 100% 55%, 100% 88%, 0 88%); }
+            60% { clip-path: polygon(0 33%, 100% 33%, 100% 5%, 0 5%); }
+            80% { clip-path: polygon(0 92%, 100% 92%, 100% 40%, 0 40%); }
+            100% { clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Palette: Energetic & Playful (Adapted for Cyberpunk) -->
+    <!-- NEITHER Mermaid JS NOR SVG were used in this output. -->
+
+    <canvas id="matrix" class="matrix-background"></canvas>
+        
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div class="terminal-buttons">
+                <div class="terminal-button red"></div>
+                <div class="terminal-button yellow"></div>
+                <div class="terminal-button green"></div>
+            </div>
+            <div class="glitch" data-text="john_alves_analysis.exe">john_alves_analysis.exe</div>
+            <div class="terminal-buttons"></div>
+        </div>
+
+        <div class="terminal-body" id="terminal-body-scroll">
+            <div class="max-w-4xl mx-auto p-4 sm:p-8">
+
+                <header class="text-center mb-12">
+                    <h1 class="text-4xl md:text-5xl font-black text-terminal-cyan mb-2 text-shadow-glow">Diagnóstico de Performance // SYSTEM ONLINE</h1>
+                    <h2 class="text-2xl font-semibold text-terminal-green text-shadow-glow">Canal JohnAlves</h2>
+                    <p class="max-w-2xl mx-auto mt-4 text-text-color text-shadow">Uma análise aprofundada dos seus dados para revelar desafios críticos e um roteiro estratégico para o crescimento acelerado do seu canal.</p>
+                </header>
+
+                <main class="space-y-12">
+                    
+                    <section id="snapshot">
+                        <div class="text-center mb-8">
+                            <h3 class="text-3xl font-bold section-title">STATUS ATUAL: OVERVIEW</h3>
+                            <p class="text-text-color mt-2 text-shadow">Os principais indicadores de performance do canal revelam uma base para crescimento, mas com desafios claros em engajamento e conversão.</p>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center">
+                            <div class="card-cyber">
+                                <p class="text-4xl font-black text-terminal-green text-shadow-glow">5.463</p>
+                                <p class="text-gray-400 font-semibold mt-1">Visualizações Totais</p>
+                            </div>
+                            <div class="card-cyber">
+                                <p class="text-4xl font-black text-terminal-green text-shadow-glow">34,7h</p>
+                                <p class="text-gray-400 font-semibold mt-1">Tempo de Exibição</p>
+                            </div>
+                            <div class="card-cyber">
+                                <p class="text-4xl font-black text-terminal-red text-shadow-glow">3,7%</p>
+                                <p class="text-gray-400 font-semibold mt-1">CTR Médio</p>
+                            </div>
+                            <div class="card-cyber">
+                                <p class="text-4xl font-black text-terminal-red text-shadow-glow">27</p>
+                                <p class="text-gray-400 font-semibold mt-1">Inscritos</p>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="highlights" class="card-cyber">
+                        <h3 class="text-3xl font-bold section-title">MODULE: ENGAGEMENT BOOSTERS</h3>
+                        <p class="text-text-color mb-8 max-w-3xl text-shadow">A análise revela focos de sucesso que devem ser a base da nova estratégia de conteúdo. O formato Shorts e temas específicos de fitness e desenvolvimento pessoal mostram um claro potencial de engajamento.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                            <div>
+                                <h4 class="text-xl font-semibold text-terminal-cyan mb-2 text-shadow">Identificação de Tópicos Chave</h4>
+                                <ul class="list-disc list-inside space-y-2 text-text-color">
+                                    <li><strong>Shorts sobre Calistenia:</strong> Lidera em visualizações, indicando interesse prático.</li>
+                                    <li><strong>Confiança e Autoestima:</strong> Tópicos com grande apelo e engajamento.</li>
+                                    <li><strong>Formatos Comparativos:</strong> "Calistenia vs. Academia" provou ser um formato de alta conversão.</li>
+                                    <li><strong>Menções a figuras populares:</strong> Hashtags como #cbum aumentam as impressões e o alcance inicial.</li>
+                                </ul>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="topVideosChart"></canvas>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="challenges" class="card-cyber">
+                        <h3 class="text-3xl font-bold section-title">ERROR_LOG: CRITICAL_ISSUES</h3>
+                        <p class="text-text-color mb-8 max-w-3xl text-shadow">Apesar dos pontos positivos, existem gargalos significativos que impedem o crescimento do canal. A baixa conversão de visualizações em inscritos e a baixa atratividade das miniaturas (CTR) são os problemas mais urgentes.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                            <div>
+                                <h4 class="text-xl font-semibold text-terminal-red mb-2 text-shadow-glow">Desempenho Geral</h4>
+                                <div class="chart-container" style="height:250px;">
+                                    <canvas id="performanceChart"></canvas>
+                                </div>
+                                <p class="mt-4 text-text-color text-shadow">40% dos vídeos possuem menos de 50 visualizações, indicando uma falha na distribuição inicial.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-semibold text-terminal-red mb-2 text-shadow-glow">Conversão de Inscritos</h4>
+                                <div class="chart-container" style="height:250px;">
+                                    <canvas id="subscriberChart"></canvas>
+                                </div>
+                                <p class="mt-4 text-text-color text-shadow">A grande maioria dos vídeos não está convertendo espectadores em seguidores fiéis.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-semibold text-terminal-red mb-2 text-shadow-glow">Taxa de Cliques (CTR)</h4>
+                                 <div class="chart-container" style="height:250px;">
+                                    <canvas id="ctrChart"></canvas>
+                                </div>
+                                <p class="mt-4 text-text-color text-shadow">O CTR médio está bem abaixo da meta de 5-10%, sinalizando que títulos e thumbnails não são atrativos.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="roadmap" class="card-cyber">
+                        <h3 class="text-3xl font-bold section-title">EXECUTE_PROTOCOLS: STRATEGIC_DEPLOYMENT</h3>
+                        <p class="text-text-color mb-8 max-w-3xl text-shadow">Este é um plano de ação organizado por prioridade para corrigir os problemas críticos e potencializar os pontos fortes do canal. Siga estes passos para ver resultados tangíveis.</p>
+                        <div class="flow-step" data-step="1">
+                            <h4 class="text-xl font-semibold text-terminal-cyan mb-2 text-shadow">Prioridade Alta: Fundamentos e Otimização</h4>
+                            <ul class="list-disc list-inside space-y-2 text-text-color">
+                                <li><strong>Otimização de Shorts:</strong> Usar sempre a hashtag #shorts. Criar ganchos fortes nos primeiros 3 segundos.</li>
+                                <li><strong>Melhorar Títulos e Thumbnails:</strong> Foco em títulos curiosos e thumbnails com alto contraste e rostos expressivos para aumentar o CTR.</li>
+                                <li><strong>Correção Técnica:</strong> Auditar e corrigir vídeos com datas de publicação erradas e dados inconsistentes.</li>
+                            </ul>
+                        </div>
+                        <div class="flow-step" data-step="2">
+                            <h4 class="text-xl font-semibold text-terminal-cyan mb-2 text-shadow">Prioridade Média: Conteúdo e Engajamento</h4>
+                            <ul class="list-disc list-inside space-y-2 text-text-color">
+                                <li><strong>Foco Estratégico de Conteúdo:</strong> Dobrar a aposta nos temas que funcionam: confiança, calistenia e comparações.</li>
+                                <li><strong>Inserir Chamadas para Ação (CTAs):</strong> Pedir explicitamente para "inscrever-se", "curtir" e "comentar" em todos os vídeos.</li>
+                                <li><strong>Otimização de SEO:</strong> Pesquisar e usar palavras-chave e hashtags mais específicas e com menos concorrência.</li>
+                            </ul>
+                        </div>
+                        <div class="flow-step" data-step="3">
+                            <h4 class="text-xl font-semibold text-terminal-cyan mb-2 text-shadow">Prioridade Baixa: Expansão e Retenção</h4>
+                            <ul class="list-disc list-inside space-y-2 text-text-color">
+                                <li><strong>Testar Formatos Mais Longos:</strong> Experimentar vídeos de 2 a 5 minutos sobre os temas populares para aumentar a retenção.</li>
+                                <li><strong>Promoção Externa:</strong> Divulgar vídeos no Instagram Reels, TikTok e outras redes para atrair novo público.</li>
+                                <li><strong>Construção de Comunidade:</strong> Responder comentários e considerar colaborações com outros criadores.</li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <!-- Novo Conteúdo de Próximos Passos -->
+                    <section id="next-steps-content" class="card-cyber">
+                        <h3 class="text-3xl font-bold section-title">PRÓXIMOS PASSOS: REBOOT DE CONTEÚDO</h3>
+                        <p class="text-text-color mb-8 max-w-3xl text-shadow">
+                            Para impulsionar o canal, é essencial focar em temas de desenvolvimento pessoal que ressoem com sua audiência e que possuem alto potencial de busca e engajamento. Aqui estão 5 diretrizes para a criação de novos vídeos longos, com sugestões de títulos e formatos.
+                        </p>
+
+                        <!-- Tema 1 -->
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold text-terminal-green mb-2 text-shadow">1. COMO COMEÇAR DO ZERO QUANDO VOCÊ ESTÁ PERDIDO</h4>
+                            <p class="text-gray-400 mb-2">🎯 Objetivo: Conectar com pessoas que estão sem direção, mas querem mudar.</p>
+                            <p class="text-gray-400 mb-2">💡 Por que funciona:</p>
+                            <ul class="list-disc list-inside space-y-1 text-text-color ml-4">
+                                <li>É uma dor emocional muito comum.</li>
+                                <li>Muito buscado no YouTube (“como recomeçar a vida”, “não sei o que fazer da minha vida”).</li>
+                            </ul>
+                            <p class="text-gray-400 mb-2 mt-4">🎥 Sugestões de Vídeos:</p>
+                            <ul class="list-disc list-inside space-y-1 text-text-color ml-4">
+                                <li>"O QUE FAZER QUANDO VOCÊ ESTÁ PERDIDO NA VIDA?" (vídeo longo)</li>
+                                <li>Shorts como: “Se você se sente perdido, assista isso”</li>
+                                <li>Playlist: “Recomeço – Como começar quando tudo parece difícil”</li>
+                            </ul>
+                        </div>
+
+                        <!-- Tema 2 -->
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold text-terminal-green mb-2 text-shadow">2. DISCIPLINA VS MOTIVAÇÃO – QUAL REALMENTE FUNCIONA?</h4>
+                            <p class="text-gray-400 mb-2">🎯 Objetivo: Desmistificar a ideia de motivação constante e mostrar como construir hábitos reais.</p>
+                            <p class="text-gray-400 mb-2">💡 Por que funciona:</p>
+                            <ul class="list-disc list-inside space-y-1 text-text-color ml-4">
+                                <li>Tema atemporal e altamente compartilhável.</li>
+                                <li>Ótimo para debates e engajamento nos comentários.</li>
+                            </ul>
+                            <p class="text-gray-400 mb-2 mt-4">🎥 Sugestões de Vídeos:</p>
+                            <ul class="list-disc list-inside space-y-1 text-text-color ml-4">
+                                <li>"POR QUE A MOTIVAÇÃO NÃO DURA E COMO CONSTRUIR DISCIPLINA"</li>
+                                <li>Shorts como: “Motivação não dura. Isso aqui sim.”</li>
+                                <li>Séries curtas: “Hábitos que constroem caráter”</li>
+                            </ul>
+                        </div>
+
+                        <!-- Tema 3 -->
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold text-terminal-green mb-2 text-shadow">3. COMO TREINAR MESMO SEM GANAS – O PODER DA ROTINA</h4>
+                            <p class="text-gray-400 mb-2">🎯 Objetivo: Mostrar como manter consistência mesmo sem vontade.</p>
+                            <p class="text-gray-400 mb-2">💡 Por que funciona:</p>
+                            <ul class="list-disc list-inside space-y-1 text-text-color ml-4">
+                                <li>Direto ao ponto da realidade do público.</li>
+                                <li>Forte ligação com o nicho de fitness e mentalidade.</li>
+                            </ul>
+                            <p class="text-gray-400 mb-2 mt-4">🎥 Sugestões de Vídeos:</p>
+                            <ul class="list-disc list-inside space-y-1 text-text-color ml-4">
+                                <li>"COMO TREINAR MESMO SEM GANAS – A TÉCNICA DO 'SÓ 5 MINUTOS'"</li>
+                                <li>Shorts com treino rápido + frase motivacional</li>
+                                <li>Playlist: “Treino Mental – Como manter foco mesmo sem motivação”</li>
+                            </ul>
+                        </div>
+
+                        <!-- Tema 4 -->
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold text-terminal-green mb-2 text-shadow">4. VOCÊ VIVE POR ESTEREÓTIPOS OU POR UM PROPÓSITO?</h4>
+                            <p class="text-gray-400 mb-2">🎯 Objetivo: Gerar reflexão pessoal e engajamento emocional.</p>
+                            <p class="text-gray-400 mb-2">💡 Por que funciona:</p>
+                            <ul class="list-disc list-inside space-y-1 text-text-color ml-4">
+                                <li>Já tiveram bom desempenho (CTR alto) nesse tipo de título.</li>
+                                <li>Tema profundo e atrativo para públicos jovens e adultos.</li>
+                            </ul>
+                            <p class="text-gray-400 mb-2 mt-4">🎥 Sugestões de Vídeos:</p>
+                            <ul class="list-disc list-inside space-y-1 text-text-color ml-4">
+                                <li>“VOCÊ ESTÁ VIVENDO A VIDA DE OUTROS OU A SUA?”</li>
+                                <li>Shorts com perguntas impactantes: “Será que você tá vivendo pra impressionar?”</li>
+                                <li>Playlist: “Propósito – Encontre sua razão de viver”</li>
+                            </ul>
+                        </div>
+
+                        <!-- Tema 5 -->
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold text-terminal-green mb-2 text-shadow">5. COMO GANHAR CONFIANÇA QUANDO VOCÊ NÃO SENTE NADA</h4>
+                            <p class="text-gray-400 mb-2">🎯 Objetivo: Dar passos práticos para quem se sente inseguro ou sem valor.</p>
+                            <p class="text-gray-400 mb-2">💡 Por que funciona:</p>
+                            <ul class="list-disc list-inside space-y-1 text-text-color ml-4">
+                                <li>Tema com grande demanda e pouca oferta de conteúdo de qualidade.</li>
+                                <li>Muito buscado por homens jovens (seu público principal).</li>
+                            </ul>
+                            <p class="text-gray-400 mb-2 mt-4">🎥 Sugestões de Vídeos:</p>
+                            <ul class="list-disc list-inside space-y-1 text-text-color ml-4">
+                                <li>“GANHE CONFIANÇA EM 7 DIAS – Mesmo se você não acredita em si”</li>
+                                <li>Shorts com frases fortes e técnicas rápidas (ex: “O truque psicológico pra se sentir mais confiante”)</li>
+                                <li>Playlist: “Confiança – Como construir do zero”</li>
+                            </ul>
+                        </div>
+
+                        <!-- Estratégia Básica -->
+                        <div class="mt-10">
+                            <h4 class="text-xl font-semibold text-terminal-cyan mb-4 text-shadow">🎯 ESTRATÉGIA BÁSICA PARA COMEÇAR:</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="flow-step" data-step="1">
+                                    <h5 class="text-lg font-semibold text-terminal-green mb-1 text-shadow">Escolha 1 tema por semana</h5>
+                                    <p class="text-gray-400">Ex: Segunda-feira é dia de vídeo novo.</p>
+                                </div>
+                                <div class="flow-step" data-step="2">
+                                    <h5 class="text-lg font-semibold text-terminal-green mb-1 text-shadow">Crie shorts relacionados</h5>
+                                    <p class="text-gray-400">Extraia partes-chave do vídeo longo.</p>
+                                </div>
+                                <div class="flow-step" data-step="3">
+                                    <h5 class="text-lg font-semibold text-terminal-green mb-1 text-shadow">Use CTAs claros</h5>
+                                    <p class="text-gray-400">“Se inscreva se você quer ver mais sobre [tema]”</p>
+                                </div>
+                                <div class="flow-step" data-step="4">
+                                    <h5 class="text-lg font-semibold text-terminal-green mb-1 text-shadow">Publique no horário certo</h5>
+                                    <p class="text-gray-400">18h–21h, de segunda a sexta.</p>
+                                </div>
+                                <div class="flow-step" data-step="5">
+                                    <h5 class="text-lg font-semibold text-terminal-green mb-1 text-shadow">Divulgue nas redes sociais</h5>
+                                    <p class="text-gray-400">Instagram Reels, TikTok, Twitter/X.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                </main>
+
+                <footer class="mt-12 text-center text-gray-500 text-sm">
+                    <p class="text-gray-600 text-shadow">&copy; 2024 JohnAlves Channel Analysis // All Rights Reserved // PROCESSED BY AI</p>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const alphabet = 'アァカサタナハマヤラワガザダバパイキシチニヒミリギジヂビピウクスツヌフムユルグズブヅプエケセテネヘメレゲゼデベペオコソトノホモヨロヲゴゾドボポヴッンABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const rainDrops = [];
+        for (let x = 0; x < columns; x++) rainDrops[x] = 1;
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0f0';
+            ctx.font = fontSize + 'px monospace';
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) rainDrops[i] = 0;
+                rainDrops[i]++;
+            }
+        }
+        setInterval(draw, 33);
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Cyberpunk palette for charts
+        const cyberpunkPalette = [
+            '#00ff00', // Green for positive/main
+            '#00ffff', // Cyan for secondary
+            '#ff00ff', // Magenta (replacing a lighter green)
+            '#ffff00', // Yellow
+            '#ff6600', // Orange
+            '#004d7a'  // Dark blue (background complement)
+        ];
+        const cyberpunkRed = '#ff0000'; // Pure red for warnings
+
+        function wrapLabel(label, maxLength = 16) {
+            if (typeof label !== 'string' || label.length <= maxLength) {
+                return label;
+            }
+            const words = label.split(' ');
+            const lines = [];
+            let currentLine = '';
+            for (const word of words) {
+                if ((currentLine + ' ' + word).length > maxLength) {
+                    lines.push(currentLine.trim());
+                    currentLine = word;
+                } else {
+                    currentLine += ' ' + word;
+                }
+            }
+            lines.push(currentLine.trim());
+            return lines.map(line => line.trim());
+        }
+
+        const tooltipTitleCallback = {
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            const item = tooltipItems[0];
+                            let label = item.chart.data.labels[item.dataIndex];
+                            if (Array.isArray(label)) {
+                                return label.join(' ');
+                            }
+                            return label;
+                        }
+                    }
+                },
+                legend: {
+                    display: false
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(0, 255, 255, 0.1)', // Cyan grid lines
+                        borderColor: '#0f0'
+                    },
+                    ticks: {
+                        color: '#0f0', // Green tick labels
+                        font: { family: 'Inconsolata' }
+                    }
+                },
+                y: {
+                    grid: {
+                        color: 'rgba(0, 255, 255, 0.1)',
+                        borderColor: '#0f0'
+                    },
+                    ticks: {
+                        color: '#0f0',
+                        font: { family: 'Inconsolata' }
+                    }
+                }
+            }
+        };
+
+        new Chart(document.getElementById('topVideosChart'), {
+            type: 'bar',
+            data: {
+                labels: [
+                    wrapLabel('DÁ PRA TER UM SHAPE FAZENDO CALISTENIA?'),
+                    wrapLabel('Você vive por estereótipos ou por um propósito?'),
+                    wrapLabel('CALISTENIA OU ACADEMIA QUAL O MELHOR?'),
+                    wrapLabel('CONFIANÇA E CONSTRUÍDA ATRAVÉS DO HÁBITO!')
+                ],
+                datasets: [{
+                    label: 'Visualizações',
+                    data: [556, 515, 545, 510],
+                    backgroundColor: cyberpunkPalette[0],
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                ...tooltipTitleCallback,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                        ticks: { color: '#0f0', font: { family: 'Inconsolata' } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                        ticks: { color: '#0ff', font: { family: 'Inconsolata' } }
+                    }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('performanceChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['< 50 Views', '> 50 Views'],
+                datasets: [{
+                    data: [40, 60],
+                    backgroundColor: [cyberpunkRed, cyberpunkPalette[0]],
+                    borderColor: 'var(--terminal-bg)',
+                    borderWidth: 4
+                }]
+            },
+            options: {
+                ...tooltipTitleCallback,
+                plugins: {
+                    tooltip: tooltipTitleCallback.plugins.tooltip,
+                    legend: {
+                        display: true, // Display legend for doughnut
+                        position: 'bottom',
+                        labels: {
+                            color: 'var(--text-color)', // Text color for legend
+                            font: { family: 'Inconsolata' }
+                        }
+                    }
+                }
+            }
+        });
+        
+        new Chart(document.getElementById('subscriberChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Geraram 0 Inscritos', 'Geraram Inscritos'],
+                datasets: [{
+                    data: [68, 32],
+                    backgroundColor: [cyberpunkRed, cyberpunkPalette[1]],
+                    borderColor: 'var(--terminal-bg)',
+                    borderWidth: 4
+                }]
+            },
+            options: {
+                ...tooltipTitleCallback,
+                 plugins: {
+                    tooltip: tooltipTitleCallback.plugins.tooltip,
+                    legend: {
+                        display: true, // Display legend for doughnut
+                        position: 'bottom',
+                        labels: {
+                            color: 'var(--text-color)', // Text color for legend
+                            font: { family: 'Inconsolata' }
+                        }
+                    }
+                }
+            }
+        });
+        
+        new Chart(document.getElementById('ctrChart'), {
+            type: 'bar',
+            data: {
+                labels: ['CTR Atual', 'Meta Mínima', 'Meta Ideal'],
+                datasets: [{
+                    label: 'Taxa de Cliques (%)',
+                    data: [3.7, 5, 10],
+                    backgroundColor: [cyberpunkRed, cyberpunkPalette[2], cyberpunkPalette[0]],
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                ...tooltipTitleCallback,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                        ticks: { color: '#0ff', font: { family: 'Inconsolata' } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                        ticks: { color: '#0f0', font: { family: 'Inconsolata' } }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
