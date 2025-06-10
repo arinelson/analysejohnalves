@@ -56,23 +56,16 @@
             border-radius: 8px;
             box-shadow: 0 0 30px rgba(0, 255, 0, 0.5),
                         inset 0 0 10px rgba(0, 255, 0, 0.2);
-            overflow: hidden;
+            overflow: hidden; /* Keep hidden for container, body will scroll */
             border: 1px solid var(--terminal-green);
             transform-style: preserve-3d;
-            animation: float 12s ease-in-out infinite; /* Increased duration for slower animation */
+            /* Removed animation: float to improve mobile scrolling */
             display: flex;
             flex-direction: column;
             min-height: 94vh; /* Ensure it takes most of the viewport height */
         }
 
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0) rotateX(0.5deg) rotateY(0.25deg); /* Reduced initial rotation */
-            }
-            50% {
-                transform: translateY(-3px) rotateX(0.25deg) rotateY(0.125deg); /* Reduced translateY and rotation */
-            }
-        }
+        /* Removed @keyframes float as it's no longer used */
 
         .terminal-header {
             background: linear-gradient(to right, #0a0a0a, #111);
@@ -106,7 +99,7 @@
         .terminal-body {
             padding: 20px;
             flex-grow: 1;
-            overflow-y: auto;
+            overflow-y: auto; /* This handles the internal scrolling */
             line-height: 1.6;
             font-size: 1.05rem;
         }
